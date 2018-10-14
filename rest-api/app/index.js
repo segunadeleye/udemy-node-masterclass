@@ -1,8 +1,10 @@
-const http = require('http');
+const fs = require('fs');
 const url = require('url');
+const http = require('http');
+const https = require('https');
 const { StringDecoder } = require('string_decoder');
 
-const server = http.createServer((req, res) => {
+const requestHandler = (req, res) => {
   // Get the URL and parse it
   const parsedUrl = url.parse(req.url, true);
 
@@ -60,13 +62,24 @@ const server = http.createServer((req, res) => {
     });
 
   });
+}
 
+const httpServer = http.createServer(requestHandler);
+
+const httpsOptions = {
+  key: fs.readFileSync('./https/key.pem'),
+  cert: fs.readFileSync('./https/cert.pem')
+};
+
+const httpsServer = https.createServer(httpsOptions, requestHandler);
+
+httpServer.listen(3000, () => {
+  console.log('HTTP server listening on port 3000!');
 });
 
-server.listen(3000, () => {
-  console.log('Server listening on!');
+httpsServer.listen(3001, () => {
+  console.log('HTTPS server listening on port 3001!');
 });
-
 
 const handlers = {
   sample(data, callback) {
