@@ -47,7 +47,13 @@ const server = http.createServer((req, res) => {
       statusCode = typeof(statusCode) == 'number' ? statusCode : 200;
       payload = JSON.stringify(typeof(payload) == 'object' ? payload : {});
 
-      res.writeHead(statusCode);
+      res.writeHead(statusCode, {
+        'Content-Type': 'application/json'
+      });
+
+      // We could also set the header by using setHeader
+      // res.setHeader('Content-Type', 'application/json');
+
       res.end(payload);
 
       console.log('Returning response: ', statusCode, payload);
