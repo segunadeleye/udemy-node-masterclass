@@ -22,7 +22,7 @@ const server = http.createServer((req, res) => {
   // Required to decode the streams of data
   // from the HTTP request into string
   const decoder = new StringDecoder('utf-8');
-  const buffer = '';
+  let buffer = '';
 
   // A "data" event is emmited each time a stream is received
   req.on('data', data => {
@@ -32,9 +32,27 @@ const server = http.createServer((req, res) => {
   // After all streams have been received, an "end" event is emmited
   req.on('end', () => {
     buffer += decoder.end()
+    const handler = typeof(router[trimmedPath]) == 'undefined' ? handlers.notFound : router[trimmedPath];
 
-    console.log('Request received with this payload: ', buffer);
-    res.end(`Hello World from /${ trimmedPath }\n`);
+    const data = {
+      path,
+      method,
+      headers,
+      trimmedPath,
+      queryStringObject,
+      payload: buffer,
+    };
+
+    handler(data, (statusCode, payload) => {
+      statusCode = typeof(statusCode) == 'number' ? statusCode : 200;
+      payload = JSON.stringify(typeof(payload) == 'object' ? payload : {});
+
+      res.writeHead(statusCode);
+      res.end(payload);
+
+      console.log('Returning response: ', statusCode, payload);
+    });
+
   });
 
 });
@@ -42,3 +60,18 @@ const server = http.createServer((req, res) => {
 server.listen(3000, () => {
   console.log('Server listening on!');
 });
+
+
+const handlers = {
+  sample(data, callback) {
+    callback(200, {name: 'sample handler'})
+  },
+
+  notFound(data, callback) {
+    callback(404)
+  }
+}
+
+const router = {
+  sample: handlers.sample
+};
